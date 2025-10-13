@@ -1,0 +1,94 @@
+datasource db {
+    provider = "postgresql"
+    url = env("DATABASE_URL")
+}
+
+generator client {
+    provider = "prisma-client"
+    output = "./generated/prisma"
+}
+
+model User {
+    id String @id @default(uuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    name String
+    email String
+    password String
+    salt String?
+
+    profile String?
+
+    blockedBy User[] @relation("UserBlocked")
+    blockedUsers User[] @relation("UserBlocked")
+
+    followedBy User[] @relation("UserFollows")
+    following User[] @relation("UserFollows")
+
+    followedTags Tag[] @relation("FollowedTags")
+    blockedTags Tag[] @relation("BlockedTags")
+
+    feed Post[] @relation("FeedPosts")
+    posts Post[] @relation("AuthoredPosts")
+
+    messageHistories MessageHistory[]
+    messages Message[]
+}
+
+model Post {
+    id String @id @default(uuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    title String?
+    text String?
+
+    author User @relation("AuthoredPosts", fields: [authorId], references: [id])
+    authorId String
+    feeds User[] @relation("FeedPosts")
+
+    replyTo Post? @relation("PostReplies", fields: [replyToId], references: [id])
+    replyToId String
+    replies Post[] @relation("PostReplies")
+
+    tags Tag[]
+}
+
+model Tag {
+    id String @id @default(uuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    name String
+    aliases String[]
+
+    taggedPosts Post[]
+
+    followedBy User[] @relation("FollowedTags")
+    blockedBy User[] @relation("BlockedTags")
+}
+
+model MessageHistory {
+    id String @id @default(uuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    name String?
+
+    users User[]
+    messages Message[]
+}
+
+model Message {
+    id String @id @default(uuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    author User @relation(fields: [authorId], references: [id])
+    authorId String
+    text String
+
+    history MessageHistory @relation(fields: [historyId], references: [id])
+    historyId String
+}
