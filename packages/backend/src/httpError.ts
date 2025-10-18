@@ -1,4 +1,5 @@
 import { Response } from "express";
+import { PrismaClientKnownRequestError } from "../../../generated/prisma/internal/prismaNamespace";
 
 class HttpError extends Error {
     name = "HttpError";
@@ -22,6 +23,22 @@ class HttpError extends Error {
             case "TokenExpiredError":
                 status = 403;
                 message = "Token expired";
+                break;
+            case "PrismaClientKnownRequestError":
+                const prismaError = error as PrismaClientKnownRequestError;
+                switch (prismaError.code) {
+                    case "P2001": 
+                        status = 404; //record not found
+                        message = prismaError.message;
+                        break;
+                    case "P2002":
+                        status = 400; //unique constraint failed
+                        message = prismaError.message;
+                        break;
+                    default:
+                        status = 500;
+                        message = "Internal server error";
+                }
                 break;
             default:
                 status = 500;
