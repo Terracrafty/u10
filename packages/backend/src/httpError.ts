@@ -27,7 +27,8 @@ class HttpError extends Error {
             case "PrismaClientKnownRequestError":
                 const prismaError = error as PrismaClientKnownRequestError;
                 switch (prismaError.code) {
-                    case "P2001": 
+                    case "P2001":
+                    case "P2025":
                         status = 404; //record not found
                         message = prismaError.message;
                         break;

@@ -9,6 +9,7 @@ generator client {
 }
 
 model User {
+    deleted Boolean @default(false)
     id String @id @default(uuid())
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -17,6 +18,7 @@ model User {
     email String @unique
     password String
     salt String?
+    isAdmin Boolean @default(false)
 
     profile String?
 
@@ -37,6 +39,7 @@ model User {
 }
 
 model Post {
+    deleted Boolean @default(false)
     id String @id @default(uuid())
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -56,6 +59,7 @@ model Post {
 }
 
 model Tag {
+    deleted Boolean @default(false)
     id String @id @default(uuid())
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -70,6 +74,7 @@ model Tag {
 }
 
 model MessageHistory {
+    deleted Boolean @default(false)
     id String @id @default(uuid())
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -81,6 +86,7 @@ model MessageHistory {
 }
 
 model Message {
+    deleted Boolean @default(false)
     id String @id @default(uuid())
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
