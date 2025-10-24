@@ -52,7 +52,7 @@ model Post {
     feeds User[] @relation("FeedPosts")
 
     replyTo Post? @relation("PostReplies", fields: [replyToId], references: [id])
-    replyToId String
+    replyToId String?
     replies Post[] @relation("PostReplies")
 
     tags Tag[]
