@@ -64,7 +64,7 @@ model Tag {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    name String
+    name String @unique
     aliases String[]
 
     taggedPosts Post[]
