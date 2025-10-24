@@ -14,6 +14,42 @@ const env = load({
 
 const userRouter = Router();
 
+export const publicUserSelects = {
+    createdAt: true,
+    name: true,
+    profile: true,
+    followedBy: { select: {
+        id: true,
+        name: true,
+    }},
+    posts: true,
+}
+
+export const privateUserSelects = {
+    createdAt: true,
+    name: true,
+    email: true,
+    isAdmin: true,
+    profile: true,
+    blockedUsers: { select: {
+        id: true,
+        name: true,
+    }},
+    followedBy: { select: {
+        id: true,
+        name: true,
+    }},
+    following: { select: {
+        id: true,
+        name: true,
+    }},
+    followedTags: true,
+    blockedTags: true,
+    feed: true,
+    posts: true,
+    messageHistories: true
+}
+
 function hashAndSaltPassword(password:string) {
     const salt = randomBytes(128).toString("hex");
     const hashedPassword = createHash("sha256").update(password + salt).digest("hex");
@@ -90,7 +126,7 @@ export async function auth(userId:string, token:string, admin:boolean = false) {
     }
 }
 
-export function getToken(req:Request) {
+export function getTokenFromHeader(req:Request) {
     const token = req.header("Authorization")?.replace("Bearer ", "");
     if (!token) {
         throw new HttpError(401, "Authorization required");
@@ -101,16 +137,7 @@ export function getToken(req:Request) {
 export async function getUserProfilePublic(userId:string) {
     const user = await prisma.user.findUniqueOrThrow({
         where: { id: userId },
-        select: {
-            createdAt: true,
-            name: true,
-            profile: true,
-            followedBy: { select: {
-                id: true,
-                name: true,
-            }},
-            posts: true,
-        }
+        select: publicUserSelects
     });
     return JSON.stringify(user);
 }
@@ -128,39 +155,37 @@ export async function getUserProfilePrivate(userId:string, token:string) {
     await auth(userId, token);
     const user = await prisma.user.findUniqueOrThrow({
         where: { id:userId },
-        select: {
-            createdAt: true,
-            name: true,
-            email: true,
-            isAdmin: true,
-            profile: true,
-            blockedUsers: { select: {
-                id: true,
-                name: true,
-            }},
-            followedBy: { select: {
-                id: true,
-                name: true,
-            }},
-            following: { select: {
-                id: true,
-                name: true,
-            }},
-            followedTags: true,
-            blockedTags: true,
-            feed: true,
-            posts: true,
-            messageHistories: true
-        }
+        select: privateUserSelects
     });
     return JSON.stringify(user);
 }
 
 userRouter.post("/:id", async (req:Request, res:Response) => {
     try {
-        const token = getToken(req);
+        const token = getTokenFromHeader(req);
         const user = await getUserProfilePrivate(req.params.id, token);
         res.status(200).json(user).end();
+    } catch (e) {
+        handleHttpError(e, res);
+    }
+});
+
+export async function searchUser(nameContains:string) {
+    return await prisma.user.findMany({
+        where: {
+            name: {
+                contains: nameContains,
+                mode: "insensitive"
+            }
+        },
+        select: publicUserSelects
+    })
+}
+
+userRouter.get("/search", json(), async (req:Request, res:Response) => {
+    try {
+        const result = await searchUser(req.body.searchString);
+        res.status(200).json(result).end();
     } catch (e) {
         handleHttpError(e, res);
     }
@@ -189,7 +214,7 @@ export async function updateUserProfile(userId:string, token:string, name?:strin
 
 userRouter.patch("/:id", json(), async (req:Request, res:Response) => {
     try {
-        const token = getToken(req);
+        const token = getTokenFromHeader(req);
         const {name = null, email = null, password = null, profile = null} = req.body;
         await updateUserProfile(req.params.id, token, name, email, password, profile);
         res.status(200).end();
@@ -212,7 +237,7 @@ export async function follow(userId:string, token:string, targetId:string) {
 
 userRouter.post("/:id/follow", json(), async (req:Request, res:Response) => {
     try {
-        const token = getToken(req);
+        const token = getTokenFromHeader(req);
         await follow(req.params.id, token, req.body.targetId);
         res.status(200).end;
     } catch (e) {
@@ -234,7 +259,7 @@ export async function unfollow(userId:string, token:string, targetId:string) {
 
 userRouter.post("/:id/unfollow", json(), async (req:Request, res:Response) => {
     try {
-        const token = getToken(req);
+        const token = getTokenFromHeader(req);
         await unfollow(req.params.id, token, req.body.targetId);
         res.status(200).end;
     } catch (e) {
@@ -256,7 +281,7 @@ export async function block(userId:string, token:string, targetId:string) {
 
 userRouter.post("/:id/block", json(), async (req:Request, res:Response) => {
     try {
-        const token = getToken(req);
+        const token = getTokenFromHeader(req);
         await block(req.params.id, token, req.body.targetId);
         res.status(200).end;
     } catch (e) {
@@ -278,7 +303,7 @@ export async function unblock(userId:string, token:string, targetId:string) {
 
 userRouter.post("/:id/unblock", json(), async (req:Request, res:Response) => {
     try {
-        const token = getToken(req);
+        const token = getTokenFromHeader(req);
         await unblock(req.params.id, token, req.body.targetId);
         res.status(200).end;
     } catch (e) {
@@ -313,7 +338,7 @@ export async function nuclearBlock(userId:string, token:string, targetId:string)
 
 userRouter.post("/:id/nukeblock", json(), async (req:Request, res:Response) => {
     try {
-        const token = getToken(req);
+        const token = getTokenFromHeader(req);
         await nuclearBlock(req.params.id, token, req.body.targetId);
     } catch (e) {
         handleHttpError(e, res);
@@ -329,7 +354,7 @@ export async function deleteUser(userId:string, token:string) {
 
 userRouter.delete("/:id", async (req:Request, res:Response) => {
     try {
-        const token = getToken(req);
+        const token = getTokenFromHeader(req);
         deleteUser(req.params.id, token);
         res.status(204).end();
     } catch (e) {
