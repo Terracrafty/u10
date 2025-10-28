@@ -203,11 +203,11 @@ export async function updateUserProfile(userId:string, token:string, name?:strin
     await prisma.user.update({
         where: { id: userId },
         data: {
-            name: name ?? undefined,
-            email: email ?? undefined,
-            password: hash?.hashedPassword ?? undefined,
-            salt: hash?.salt ?? undefined,
-            profile: profile ?? undefined,
+            name: name,
+            email: email,
+            password: hash?.hashedPassword,
+            salt: hash?.salt,
+            profile: profile,
         }
     });
 }
@@ -215,7 +215,7 @@ export async function updateUserProfile(userId:string, token:string, name?:strin
 userRouter.patch("/:id", json(), async (req:Request, res:Response) => {
     try {
         const token = getTokenFromHeader(req);
-        const {name = null, email = null, password = null, profile = null} = req.body;
+        const {name, email, password, profile} = req.body;
         await updateUserProfile(req.params.id, token, name, email, password, profile);
         res.status(200).end();
     } catch (e) {
