@@ -6,7 +6,8 @@ import { isEmail } from "validator";
 import jwt from "jsonwebtoken";
 import { load } from "ts-dotenv";
 import { LoginResponse } from "../../../../types";
-import { connect } from "node:http2";
+import { defaultPostSelects } from "./post";
+import moment from "moment";
 
 const env = load({
     JWT_SECRET:String
@@ -22,7 +23,7 @@ export const publicUserSelects = {
         id: true,
         name: true,
     }},
-    posts: true,
+    posts: { select: defaultPostSelects },
 }
 
 export const privateUserSelects = {
@@ -43,10 +44,13 @@ export const privateUserSelects = {
         id: true,
         name: true,
     }},
-    followedTags: true,
-    blockedTags: true,
-    feed: true,
-    posts: true,
+    followedTags: { select: { name: true } },
+    blockedTags: { select: { name: true } },
+    feed: {
+        select: defaultPostSelects, 
+        where: { createdAt: { gt: moment().subtract(30, "days").format("YYYY-MM-DD")}}
+    },
+    posts: { select: defaultPostSelects },
     messageHistories: true
 }
 
@@ -102,8 +106,8 @@ export async function login(email:string, password:string):Promise<LoginResponse
 userRouter.post("/login", json(), async (req:Request, res:Response) => {
     try {
         const {email, password} = req.body;
-        const token = await login(email, password);
-        res.status(200).json({ token: token }).end();
+        const loginResponse = await login(email, password);
+        res.status(200).json(loginResponse).end();
     } catch (e) {
         if ((e as Error).name == "PrismaClientKnownRequestError") {
             res.status(400).json({ error: "Incorrect credentials" }).end();
@@ -142,9 +146,9 @@ export async function getUserProfilePublic(userId:string) {
     return JSON.stringify(user);
 }
 
-userRouter.get("/:id", async (req:Request, res:Response) => {
+userRouter.get("/:userid", async (req:Request, res:Response) => {
     try {
-        const user = await getUserProfilePublic(req.params.id);
+        const user = await getUserProfilePublic(req.params.userid);
         res.status(200).json(user).end();
     } catch (e) {
         handleHttpError(e, res)
@@ -160,10 +164,10 @@ export async function getUserProfilePrivate(userId:string, token:string) {
     return JSON.stringify(user);
 }
 
-userRouter.post("/:id", async (req:Request, res:Response) => {
+userRouter.post("/:userid", async (req:Request, res:Response) => {
     try {
         const token = getTokenFromHeader(req);
-        const user = await getUserProfilePrivate(req.params.id, token);
+        const user = await getUserProfilePrivate(req.params.userid, token);
         res.status(200).json(user).end();
     } catch (e) {
         handleHttpError(e, res);
@@ -212,11 +216,11 @@ export async function updateUserProfile(userId:string, token:string, name?:strin
     });
 }
 
-userRouter.patch("/:id", json(), async (req:Request, res:Response) => {
+userRouter.patch("/:userid", json(), async (req:Request, res:Response) => {
     try {
         const token = getTokenFromHeader(req);
         const {name, email, password, profile} = req.body;
-        await updateUserProfile(req.params.id, token, name, email, password, profile);
+        await updateUserProfile(req.params.userid, token, name, email, password, profile);
         res.status(200).end();
     } catch (e) {
         handleHttpError(e, res);
@@ -235,10 +239,10 @@ export async function follow(userId:string, token:string, targetId:string) {
     });
 }
 
-userRouter.post("/:id/follow", json(), async (req:Request, res:Response) => {
+userRouter.post("/:userid/follow", json(), async (req:Request, res:Response) => {
     try {
         const token = getTokenFromHeader(req);
-        await follow(req.params.id, token, req.body.targetId);
+        await follow(req.params.userid, token, req.body.targetId);
         res.status(200).end;
     } catch (e) {
         handleHttpError(e, res);
@@ -257,10 +261,10 @@ export async function unfollow(userId:string, token:string, targetId:string) {
     });
 }
 
-userRouter.post("/:id/unfollow", json(), async (req:Request, res:Response) => {
+userRouter.post("/:userid/unfollow", json(), async (req:Request, res:Response) => {
     try {
         const token = getTokenFromHeader(req);
-        await unfollow(req.params.id, token, req.body.targetId);
+        await unfollow(req.params.userid, token, req.body.targetId);
         res.status(200).end;
     } catch (e) {
         handleHttpError(e, res);
@@ -279,10 +283,10 @@ export async function block(userId:string, token:string, targetId:string) {
     });
 }
 
-userRouter.post("/:id/block", json(), async (req:Request, res:Response) => {
+userRouter.post("/:userid/block", json(), async (req:Request, res:Response) => {
     try {
         const token = getTokenFromHeader(req);
-        await block(req.params.id, token, req.body.targetId);
+        await block(req.params.userid, token, req.body.targetId);
         res.status(200).end;
     } catch (e) {
         handleHttpError(e, res);
@@ -301,10 +305,10 @@ export async function unblock(userId:string, token:string, targetId:string) {
     });
 }
 
-userRouter.post("/:id/unblock", json(), async (req:Request, res:Response) => {
+userRouter.post("/:userid/unblock", json(), async (req:Request, res:Response) => {
     try {
         const token = getTokenFromHeader(req);
-        await unblock(req.params.id, token, req.body.targetId);
+        await unblock(req.params.userid, token, req.body.targetId);
         res.status(200).end;
     } catch (e) {
         handleHttpError(e, res);
@@ -336,10 +340,10 @@ export async function nuclearBlock(userId:string, token:string, targetId:string)
     });
 }
 
-userRouter.post("/:id/nukeblock", json(), async (req:Request, res:Response) => {
+userRouter.post("/:userid/nukeblock", json(), async (req:Request, res:Response) => {
     try {
         const token = getTokenFromHeader(req);
-        await nuclearBlock(req.params.id, token, req.body.targetId);
+        await nuclearBlock(req.params.userid, token, req.body.targetId);
     } catch (e) {
         handleHttpError(e, res);
     }
@@ -352,14 +356,55 @@ export async function deleteUser(userId:string, token:string) {
     });
 }
 
-userRouter.delete("/:id", async (req:Request, res:Response) => {
+userRouter.delete("/:userid", async (req:Request, res:Response) => {
     try {
         const token = getTokenFromHeader(req);
-        deleteUser(req.params.id, token);
+        deleteUser(req.params.userid, token);
         res.status(204).end();
     } catch (e) {
         handleHttpError(e, res);
     }
 });
+
+export async function banUser(userId:string, token:string, targetId:string) {
+    auth(userId, token, true);
+    await prisma.user.update({
+        where: {id: targetId},
+        data: {isBanned: true}
+    })
+}
+
+userRouter.post("/:userid/ban", json(), async (req:Request, res:Response) => {
+    try {
+        const token = getTokenFromHeader(req);
+        await banUser(req.body.userId, token, req.params.userid);
+        res.status(200).end();
+    } catch (e) {
+        handleHttpError(e, res);
+    }
+});
+
+export async function unbanUser(userId:string, token:string, targetId:string) {
+    auth(userId, token, true);
+    await prisma.user.update({
+        where: {id: targetId},
+        data: {isBanned: false}
+    })
+}
+
+userRouter.post("/:userid/unban", json(), async (req:Request, res:Response) => {
+    try {
+        const token = getTokenFromHeader(req);
+        await banUser(req.body.userId, token, req.params.userid);
+        res.status(200).end();
+    } catch (e) {
+        handleHttpError(e, res);
+    }
+});
+
+export async function checkIfUserBanned(userId:string) {
+    const user = await prisma.user.findUniqueOrThrow({where: {id: userId}});
+    return user.isBanned;
+}
 
 export {userRouter};

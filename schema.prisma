@@ -20,6 +20,8 @@ model User {
     salt String?
     isAdmin Boolean @default(false)
 
+    isBanned Boolean @default(false)
+
     profile String?
 
     blockedBy User[] @relation("UserBlocked")

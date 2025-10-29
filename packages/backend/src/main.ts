@@ -1,6 +1,7 @@
 import express, { Router } from "express";
 import { load } from "ts-dotenv";
 import { userRouter } from "./controllers/User";
+import { postRouter } from "./controllers/post";
 
 const env = load({
     PORT:Number,
@@ -8,6 +9,7 @@ const env = load({
 
 const mainRouter = Router();
 mainRouter.use("/users", userRouter);
+mainRouter.use("/posts", postRouter);
 
 const app = express();
 app.use("/api", mainRouter);
