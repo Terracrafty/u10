@@ -4,7 +4,9 @@
   "main": "main.js",
   "scripts": {
     "test": "jest",
-    "dev": "nodemon src/main.ts"
+    "dev": "nodemon src/main.ts",
+    "build": "tsc",
+    "start": "node dist/packages/backend/src/main.js"
   },
   "author": "",
   "license": "ISC",
@@ -15,6 +17,7 @@
     "moment": "^2.30.1",
     "prisma-extension-soft-delete": "^2.0.1",
     "ts-dotenv": "^0.9.1",
+    "ts-node": "^10.9.2",
     "validator": "^13.15.15"
   },
   "devDependencies": {

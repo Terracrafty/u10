@@ -1,7 +1,7 @@
-import e, { json, Router, Request, Response } from "express";
+import { json, Router, Request, Response } from "express";
 import { handleHttpError, HttpError } from "../httpError";
 import { prisma } from "../prisma";
-import { auth, checkIfUserBanned, getTokenFromHeader } from "./User";
+import { auth, checkIfUserBanned, getTokenFromHeader } from "./user";
 import moment, { Moment } from "moment";
 import { contains } from "validator";
 
@@ -183,7 +183,7 @@ postRouter.get("/search", json(), async (req:Request, res:Response) => {
         const {authorName, titleContains, bodyContains, includeTags, excludeTags, olderThan, newerThan} = req.body;
         const result = await searchPosts(authorName, titleContains, bodyContains, includeTags, excludeTags, olderThan, newerThan);
         res.status(200).json(result).end()
-    } catch {
+    } catch (e) {
         handleHttpError(e, res);
     }
 })
