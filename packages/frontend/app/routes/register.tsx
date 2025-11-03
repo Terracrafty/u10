@@ -1,6 +1,7 @@
 import { register } from "~/services/User";
 import type { Route } from "../+types/root";
 import { useState } from "react";
+import { CustomButton } from "~/components/buttons";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -9,15 +10,13 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-
-
 export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [result, setResult] = useState("");
 
-  async function handleRegisterForm(formData:FormData) {
+  async function handleRegisterForm() {
     try {
       const response = await register(name, email, password);
       setResult(response.id);
@@ -28,12 +27,17 @@ export default function Register() {
     }
   }
 
-  <div className="p-20 max-w-1/2 mx-auto text-center">
-    <form action={handleRegisterForm}>
-      <input type="text" onChange={(e) => setName(e.target.value)}/>
-      <input type="email" onChange={(e) => setEmail(e.target.value)}/>
-      <input type="password" onChange={(e) => setPassword(e.target.value)}/>
-      <button type="submit">Submit</button>
-    </form>
-  </div>
+  return (
+    <div className="p-20 max-w-1/2 min-w-fit mx-auto text-center">
+      <form className="w-100 mx-auto" action={handleRegisterForm}>
+        <p>Username:</p>
+        <input className="bg-white w-full my-2 rounded-md" type="text" onChange={(e) => setName(e.target.value)}/>
+        <p>Email:</p>
+        <input className="bg-white w-full my-2 rounded-md" type="email" onChange={(e) => setEmail(e.target.value)}/>
+        <p>Password:</p>
+        <input className="bg-white w-full my-2 rounded-md" type="password" onChange={(e) => setPassword(e.target.value)}/>
+        <CustomButton type="submit" text="Submit"/>
+      </form>
+    </div>
+  );
 }

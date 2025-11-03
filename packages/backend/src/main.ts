@@ -1,6 +1,6 @@
 import express, { Router } from "express";
 import { load } from "ts-dotenv";
-import { userRouter } from "./controllers/User";
+import { userRouter } from "./controllers/user";
 import { postRouter } from "./controllers/post";
 
 const env = load({
