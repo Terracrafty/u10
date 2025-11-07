@@ -1,4 +1,4 @@
-import { Router, json, Request, Response, response } from "express";
+import { Router, json, Request, Response, response, urlencoded } from "express";
 import { prisma } from "../prisma";
 import { createHash, randomBytes, UUID } from "node:crypto";
 import { handleHttpError, HttpError } from "../httpError";
@@ -18,6 +18,7 @@ const userRouter = Router();
 export const publicUserSelects = {
     createdAt: true,
     name: true,
+    isBanned: true,
     profile: true,
     followedBy: { select: {
         id: true,
@@ -31,6 +32,7 @@ export const privateUserSelects = {
     name: true,
     email: true,
     isAdmin: true,
+    isBanned: true,
     profile: true,
     blockedUsers: { select: {
         id: true,
@@ -51,7 +53,7 @@ export const privateUserSelects = {
         where: { createdAt: { gt: moment().subtract(30, "days").format("YYYY-MM-DD")}}
     },
     posts: { select: defaultPostSelects },
-    messageHistories: true
+    messageHistories: false
 }
 
 function hashAndSaltPassword(password:string) {
@@ -180,15 +182,17 @@ export async function searchUser(nameContains:string) {
             name: {
                 contains: nameContains,
                 mode: "insensitive"
-            }
+            },
+            isBanned: {equals: false}
         },
         select: publicUserSelects
     })
 }
 
-userRouter.get("/search", json(), async (req:Request, res:Response) => {
+userRouter.get("/search", async (req:Request, res:Response) => {
     try {
-        const result = await searchUser(req.body.searchString);
+        const nameContains = (req.query.nameContains) as string;
+        const result = await searchUser(nameContains);
         res.status(200).json(result).end();
     } catch (e) {
         handleHttpError(e, res);
