@@ -54,7 +54,7 @@ export async function createPost(
   return response.data;
 }
 
-export async function getPost(id: string) {
+export async function getPost(id: string): Promise<Post> {
   const response = await axiosInstance.get(`/${id}`);
   return response.data;
 }
