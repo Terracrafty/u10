@@ -4,7 +4,7 @@ import { addTags, createPost, editPost, type Post } from "~/services/PostService
 import { CustomButton } from "./buttons";
 
 export function PostEditor({ replyTo, post }: { replyTo?: string, post?: Post }) {
-  const {id, token} = useLogin();
+  const {userId: id, token} = useLogin();
   const [error, setError] = useState("")
   const [title, setTitle] = useState(post?.title ?? "");
   const [text, setText] = useState(post?.text ?? "");

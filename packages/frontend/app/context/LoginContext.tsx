@@ -2,7 +2,7 @@ import { createContext, useContext, useState } from "react";
 import type { ReactNode } from "react";
 
 type loginContextType = {
-  id: string,
+  userId: string,
   setId: (id: string) => void,
   token: string,
   setToken: (token: string) => void,
@@ -19,7 +19,7 @@ export const LoginProvider: React.FC<loginProviderProps> = ({ children }) => {
   const [token, setToken] = useState("");
 
   const contextValue:loginContextType = {
-    id,
+    userId: id,
     setId,
     token,
     setToken,

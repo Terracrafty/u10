@@ -16,7 +16,7 @@ export type Post = {
   replyTo: {
     id: string;
   } | null;
-  replies: {
+  replies: ({
     id: string;
     createdAt: Date;
     title: string | null;
@@ -24,11 +24,15 @@ export type Post = {
       id: string;
       name: string;
     };
-  }[];
+  } | Post)[];
   tags: {
     name: string;
   }[];
 };
+
+export function badIsPost(i: any): i is Post {
+  return (i as Post).replies !== undefined
+}
 
 export async function createPost(
   userId: string,
@@ -57,6 +61,19 @@ export async function createPost(
 export async function getPost(id: string): Promise<Post> {
   const response = await axiosInstance.get(`/${id}`);
   return response.data;
+}
+
+export async function getPostRoot(id: string): Promise<Post> {
+  const response = await axiosInstance.get(`/${id}/root`);
+  return response.data;
+}
+
+export async function appendReplies(post: Post): Promise<void> {
+  post.replies.forEach(async reply => {
+    if (!(badIsPost(reply))) {
+      reply = await getPost(reply.id)
+    }
+  });
 }
 
 export async function searchPosts(

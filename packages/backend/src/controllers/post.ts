@@ -179,6 +179,32 @@ postRouter.get("/:postid", async (req: Request, res: Response) => {
   }
 });
 
+export async function getPostRoot(id: string) {
+  let post = await prisma.post.findUniqueOrThrow({
+    where: { id: id },
+    select: defaultPostSelects,
+  });
+  while (post.replyTo) {
+    const prev = post;
+    post = await prisma.post.findUniqueOrThrow({
+      where: { id: post.replyTo.id },
+      select: defaultPostSelects,
+    });
+    const prevIndex = post.replies.indexOf(prev);
+    post.replies.splice(prevIndex, 1, prev);
+  }
+  return post;
+}
+
+postRouter.get("/:postid/root", async (req: Request, res: Response) => {
+  try {
+    const post = getPostRoot(req.params.postid);
+    res.status(200).json(post).end();
+  } catch (e) {
+    handleHttpError(e, res);
+  }
+});
+
 export async function searchPosts(
   authorName?: string,
   titleContains: string = "",

@@ -5,10 +5,11 @@ export default [
   route("login", "routes/login.tsx"),
   route("register", "routes/register.tsx"),
   route("feed", "routes/feed.tsx"),
-  ...prefix("posts", [
+  ...prefix("post", [
     route("new", "routes/post/new.tsx"),
     route(":postId", "", [
       route("edit", "routes/post/edit.tsx"),
+      route("reply", "routes/post/reply.tsx"),
     ]),
   ]),
 ] satisfies RouteConfig;

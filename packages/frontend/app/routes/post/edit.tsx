@@ -1,4 +1,4 @@
-import { PostEditor } from "~/components/postEditor";
+import { PostEditor } from "~/components/PostEditor";
 import type { Route } from "../+types/home";
 import { useParams } from "react-router";
 import { useLogin } from "~/context/LoginContext";
@@ -15,7 +15,7 @@ export function meta({}: Route.MetaArgs) {
 
 export default function EditPost() {
   const {postId} = useParams();
-  const {id} = useLogin();
+  const {userId: id} = useLogin();
   const [error, setError] = useState("")
   const [post, setPost] = useState<Post|undefined>(undefined);
   useEffect(() => {

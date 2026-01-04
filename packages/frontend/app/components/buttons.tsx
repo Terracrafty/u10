@@ -6,6 +6,6 @@ export const CustomLink = ({ to, text }: { to: string, text:string }) => {
   return <Link to={to} className={buttonStyles}>{text}</Link>;
 };
 
-export const CustomButton = ({ type, text }: {type: "button"|"reset"|"submit", text:string}) => {
+export const CustomButton = ({ type, text}: {type: "button"|"reset"|"submit", text:string}) => {
   return <button type={type} className={buttonStyles}>{text}</button>
 }
