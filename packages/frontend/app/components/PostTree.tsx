@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router"; 
 import { useLogin } from "~/context/LoginContext";
-import { badIsPost, getPost, getPostRoot, type Post} from "~/services/PostService";
+import { appendReplies, badIsPost, getPostRoot, type Post} from "~/services/PostService";
 
 export function PostTree({ id }: { id:string }) {
 
@@ -31,13 +31,13 @@ export function PostTree({ id }: { id:string }) {
       }
     }
     effectFunc();
-  }, [id])
+  }, [id]);
 
   function RepliesButton({ id }: { id:string }) {
     if ((submenu == subMenuEnum.replies) && (id == activeChain[activeChain.length - 1].id)) {
       return <button onClick={() => setSubmenu(subMenuEnum.none)}>Hide Replies</button>
     } else {
-      return <button onClick={() => {setSubmenu(subMenuEnum.replies); TruncateActiveChain}}>Show Replies</button>
+      return <button onClick={() => {setSubmenu(subMenuEnum.replies); TruncateActiveChain(id)}}>Show Replies</button>
     }
   }
 
@@ -45,7 +45,23 @@ export function PostTree({ id }: { id:string }) {
     if ((submenu == subMenuEnum.tags) && (id == activeChain[activeChain.length - 1].id)) {
       return <button onClick={() => setSubmenu(subMenuEnum.none)}>Hide Tags</button>
     } else {
-      return <button onClick={() => {setSubmenu(subMenuEnum.tags); TruncateActiveChain}}>Show Tags</button>
+      return <button onClick={() => {setSubmenu(subMenuEnum.tags); TruncateActiveChain(id)}}>Show Tags</button>
+    }
+  }
+
+  async function AppendRepliesInTreeFromChain() {
+    const tree = postTree;
+    let target = tree;
+    activeChain.forEach(post => {
+      const next = target?.replies.find((i) => i.id == post.id);
+      if (badIsPost(next)) {
+        target = next;
+      }
+    });
+    if (target) {
+      await appendReplies(target);
+      setPostTree(tree);
+      return target;
     }
   }
 
@@ -68,7 +84,43 @@ export function PostTree({ id }: { id:string }) {
     )
   }
 
-  
+  async function RepliesList() {
+    const [post, setPost] = useState<Post|undefined>(undefined);
+
+    useEffect(() => {
+      const effectFunc = async () => {
+        setPost(await AppendRepliesInTreeFromChain())
+      }
+      effectFunc()
+    }, []);
+
+    const repliesListInnerFunc = (post: Post) => {
+      setActiveChain([...activeChain, post]);
+      setSubmenu(subMenuEnum.none);
+    }
+
+    const RepliesListInner = ({post}: {post:Post}) => {
+      return (
+        <div>
+          {post.replies.map(i => 
+          <div onClick={() => repliesListInnerFunc(i as Post)}>
+            <div>
+              <p>{(i as Post).author.name}</p>
+              <p>{(i as Post).createdAt.toString()}</p>
+            </div>
+            <h1>{(i as Post).title}</h1>
+            <p>{(i as Post).text}</p>
+          </div>)}
+        </div>
+      )
+    }
+
+    return (
+      <div>
+        {post ? <RepliesListInner post={post} /> : <p>Loading replies...</p>}
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -88,7 +140,8 @@ export function PostTree({ id }: { id:string }) {
           { userId == post.author.id ? <Link to={`post/${post.id}/edit`}>Edit Post</Link> : null }
         </div>
       )}
-    { submenu == subMenuEnum.tags ? <TagsList /> : null }
+      { submenu == subMenuEnum.tags ? <TagsList /> : null }
+      { submenu == subMenuEnum.replies ? <RepliesList /> : null }
     </div>
   );
 }
