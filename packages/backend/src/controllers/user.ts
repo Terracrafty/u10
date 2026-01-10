@@ -16,6 +16,7 @@ const env = load({
 const userRouter = Router();
 
 export const publicUserSelects = {
+    id: true,
     createdAt: true,
     name: true,
     isBanned: true,
@@ -28,6 +29,7 @@ export const publicUserSelects = {
 }
 
 export const privateUserSelects = {
+    id: true,
     createdAt: true,
     name: true,
     email: true,

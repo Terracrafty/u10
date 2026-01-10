@@ -127,7 +127,7 @@ export function PostTree({ id }: { id:string }) {
       {activeChain.map(post => 
         <div>
           <div>
-            <a href={`posts/${post.author.id}`}>
+            <a href={`user/${post.author.id}`}>
               {post.author.name}
             </a>
             <p>{post.createdAt.toString()}</p>

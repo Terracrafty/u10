@@ -23,6 +23,7 @@ export async function login(email:string, password:string):Promise<LoginResponse
 }
 
 export type userPublic = {
+  id: string,
   createdAt: Date;
   name: string;
   isBanned: boolean;
@@ -35,6 +36,7 @@ export type userPublic = {
 }
 
 export type userPrivate = {
+  id: string,
   createdAt: Date,
   name: string,
   email: string,
@@ -42,16 +44,16 @@ export type userPrivate = {
   isBanned: boolean,
   profile?: string,
   blockedUsers: {
-      id: true,
-      name: true,
+      id: string,
+      name: string,
   }[],
   followedBy: {
-      id: true,
-      name: true,
+      id: string,
+      name: string,
   }[],
   following: {
-      id: true,
-      name: true,
+      id: string,
+      name: string,
   }[],
   followedTags: string[],
   blockedTags: string[],
