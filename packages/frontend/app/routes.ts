@@ -5,6 +5,7 @@ export default [
   route("login", "routes/login.tsx"),
   route("register", "routes/register.tsx"),
   route("feed", "routes/feed.tsx"),
+  route("user/:profileId", "routes/profile.tsx"),
   ...prefix("post", [
     route("new", "routes/post/new.tsx"),
     route(":postId", "", [

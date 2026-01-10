@@ -9,7 +9,7 @@ export function PostTree({ id }: { id:string }) {
     none,
     replies,
     tags
-  } 
+  }
 
   const {userId} = useLogin()
   const [postTree, setPostTree] = useState<Post|undefined>(undefined);
